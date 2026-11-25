@@ -253,6 +253,10 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
 .result h3{font-size:1.3rem}
 .tipcard{border-radius:20px}
 #themeBtn{margin-left:auto}
+.goal{font-size:.8rem;color:var(--muted)}
+.goal b{color:var(--ink)}
+.goal .star{color:#F59E0B}
+.dots i.pro{width:12px;height:12px;border:0;border-radius:0;margin:-2px -1px;background:#F59E0B;clip-path:polygon(50% 0,62% 35%,98% 36%,69% 58%,80% 93%,50% 72%,20% 93%,31% 58%,2% 36%,38% 35%)}
 #tipBtn{margin-left:0}
 @media (prefers-reduced-motion:reduce){.btn,.chip,.fcard,.key{transition:none}.btn:hover,.chip:hover,.fcard:hover{transform:none}}
 </style>
@@ -284,6 +288,7 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
         <div class="stat"><span id="l3">Waktu</span><b id="v3">0:00</b></div>
         <div class="stat"><span id="l4">Salah</span><b id="v4">0</b></div>
       </div>
+      <span class="goal" id="goal"></span>
       <span class="weaknote" id="weakNote"></span>
       <button class="btn" id="btnNew">Teks baru</button>
     </div>
@@ -318,6 +323,7 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
         <li>Urutan belajar: satu pelajaran di Tingkat 1, ulangi di Tingkat 2, lalu Tingkat 3, baru pelajaran berikutnya.</li>
         <li>Kejar akurasi 95% dulu, kecepatan menyusul sendiri. Latihan 15 sampai 20 menit setiap hari.</li>
         <li>Untuk benar-benar melatih sepuluh jari, pakai keyboard fisik. Di HP hanya jempol yang bekerja.</li>
+        <li><b>Titik hijau</b> berarti lulus (akurasi 95%). <b>Bintang emas</b> berarti mahir: akurasi 97% dan mencapai standar kecepatan pelajaran itu. Standarnya tertulis di atas teks latihan.</li>
         <li>Tekan <kbd>Esc</kbd> untuk mengulang dengan teks atau soal baru.</li>
       </ul>
       <button class="btn primary" id="tipClose">Tutup</button>
@@ -355,6 +361,9 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     {t:'Paragraf',     s:'latihan ketahanan', tip:'Pelan tapi tanpa salah. Mata di teks, jari yang mencari tombol.', kind:'sent', count:3}
   ];
   /* tombol yang baru diperkenalkan di tiap pelajaran (untuk bekal, hafalan, dan pemudaran huruf) */
+  /* standar mahir: akurasi dan kecepatan (kata per menit) tiap pelajaran */
+  var PRO_ACC = 97;
+  var PRO_WPM = [12, 12, 15, 15, 12, 20, 20, 25];
   var INTRO = ['asdfjkl;', 'gh', 'qwertyuiop', 'zxcvbnm,./', '1234567890', ' ', '', ''];
 
   /* ---------- Jari dan tombol ---------- */
@@ -422,11 +431,11 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
   }
 
   /* ---------- Penyimpanan kemajuan ---------- */
-  var store = {level:1, lesson:0, mode:'practice', done:{}, weak:{}, theme:'light'};
+  var store = {level:1, lesson:0, mode:'practice', done:{}, pro:{}, weak:{}, theme:'light'};
   try {
     var raw = JSON.parse(localStorage.getItem('ketikbuta.v1') || '{}');
     if(raw && typeof raw === 'object'){
-      store.level = raw.level || 1; store.lesson = raw.lesson || 0; store.done = raw.done || {}; store.theme = raw.theme === 'dark' ? 'dark' : 'light'; store.weak = (raw.weak && typeof raw.weak === 'object') ? raw.weak : {};
+      store.level = raw.level || 1; store.lesson = raw.lesson || 0; store.done = raw.done || {}; store.pro = raw.pro || {}; store.theme = raw.theme === 'dark' ? 'dark' : 'light'; store.weak = (raw.weak && typeof raw.weak === 'object') ? raw.weak : {};
       store.mode = raw.mode === 'quiz' ? 'quiz' : 'practice';
     }
   } catch(e){}
@@ -460,6 +469,11 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     });
     Object.keys(store.weak).forEach(function(c){ if(store.weak[c] <= 0) delete store.weak[c]; });
     save();
+  }
+  function updateGoal(){
+    var el = $('#goal');
+    if(store.mode === 'quiz'){ el.innerHTML = ''; return; }
+    el.innerHTML = 'Standar mahir: <b>' + PRO_ACC + '%</b> akurasi · <b>' + PRO_WPM[store.lesson] + '</b> kata/menit <span class="star">★</span>';
   }
   function updateWeakNote(){
     var wk = weakKeys(), el = $('#weakNote');
@@ -528,10 +542,10 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     var box = $('#lessons'); box.innerHTML = '';
     LESSONS.forEach(function(L, i){
       var b = document.createElement('button');
-      b.className = 'chip'; b.setAttribute('data-i', i); b.title = L.s;
+      b.className = 'chip'; b.setAttribute('data-i', i); b.title = L.s + ' · mahir: akurasi ' + PRO_ACC + '%, ' + PRO_WPM[i] + ' kata/menit';
       b.setAttribute('aria-current', i === store.lesson ? 'true' : 'false');
       var dots = '';
-      for(var l = 1; l <= 3; l++) dots += '<i class="' + (store.done[i + '-' + l] ? 'on' : '') + '"></i>';
+      for(var l = 1; l <= 3; l++) dots += '<i class="' + (store.pro[i + '-' + l] ? 'pro' : (store.done[i + '-' + l] ? 'on' : '')) + '"></i>';
       b.innerHTML = '<span class="n">' + (i+1) + '</span>' + esc(L.t) + '<span class="dots">' + dots + '</span>';
       box.appendChild(b);
     });
@@ -741,11 +755,13 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     state.done = true; state.end = performance.now();
     clearTarget(); updateStats();
     var c = calc(), pass = c.acc >= 95;
+    var pro = pass && c.acc >= PRO_ACC && c.wpm >= PRO_WPM[state.lesson];
     addWeak(state.keyErr, state.text);
     updateWeakNote();
     if(pass){
       var key = state.lesson + '-' + state.level, prev = store.done[key];
       if(!prev || c.wpm > prev.wpm) store.done[key] = {wpm:c.wpm, acc:c.acc};
+      if(pro) store.pro[key] = true;
       save(); renderLessons();
     }
     var label, primary;
@@ -753,8 +769,15 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     else if(pass && state.lesson < LESSONS.length - 1){ label = 'Pelajaran berikutnya'; primary = function(){ setLesson(state.lesson + 1); }; }
     else if(pass){ label = 'Latihan lagi'; primary = newText; }
     else { label = 'Coba lagi'; primary = newText; }
-    showResult(pass ? 'Lulus' : 'Belum lulus', pass,
-      pass ? 'Akurasi 95% ke atas. Titik pelajaran ini terisi untuk Tingkat ' + state.level + '.' : 'Akurasi masih di bawah 95%. Pelan saja dulu, kecepatan akan menyusul.',
+    var msg;
+    if(pro) msg = 'Akurasi ' + c.acc + '% dan ' + c.wpm + ' kata/menit memenuhi standar mahir. Bintang emas terisi untuk Tingkat ' + state.level + '.';
+    else if(pass) msg = 'Lulus, titik hijau terisi untuk Tingkat ' + state.level + '. Untuk bintang mahir butuh akurasi ' + PRO_ACC + '% dan ' + PRO_WPM[state.lesson] + ' kata/menit.' + (c.acc < PRO_ACC ? ' Akurasi Anda ' + c.acc + '%.' : '') + (c.wpm < PRO_WPM[state.lesson] ? ' Kecepatan Anda ' + c.wpm + ' kata/menit.' : '');
+    else msg = 'Akurasi masih di bawah 95%. Pelan saja dulu, kecepatan akan menyusul.';
+    var allPass = [1,2,3].every(function(l){ return store.done[state.lesson + '-' + l]; });
+    var allPro = [1,2,3].every(function(l){ return store.pro[state.lesson + '-' + l]; });
+    if(pass && allPro) msg += ' Ketiga tingkat sudah mahir: Anda siap ke pelajaran berikutnya.';
+    else if(pass && allPass) msg += ' Ketiga tingkat sudah lulus: boleh lanjut ke pelajaran berikutnya.';
+    showResult(pro ? 'Mahir ★' : (pass ? 'Lulus' : 'Belum lulus'), pass, msg,
       [['Kecepatan', c.wpm], ['Akurasi', c.acc + '%'], ['Waktu', fmt(c.ms)], ['Salah', state.errors]],
       weakHtml(state.keyErr, 'Tidak ada tombol yang salah. Bagus sekali.') + (Object.keys(state.keyErr).length ? ' Tombol ini akan lebih sering muncul di latihan berikutnya.' : ''),
       label, primary, 'Teks baru', newText);
@@ -820,7 +843,7 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
 
   /* ---------- Navigasi ---------- */
   function restart(){
-    renderBekal(); updateStates(); updateWeakNote();
+    renderBekal(); updateStates(); updateWeakNote(); updateGoal();
     if(store.mode === 'quiz') newQuiz(); else newText();
   }
   function setLevel(l){ store.level = l; save(); applyLevel(); restart(); }
