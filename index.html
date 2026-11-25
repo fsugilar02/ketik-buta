@@ -1,0 +1,853 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Ketik Buta</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap">
+<style>
+/* Satu layar: bilah atas, deretan pelajaran, peta jari + papan tombol (besar, di atas), panggung latihan (kecil, di bawah) */
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#16212C; --muted:#5A6773; --line:#D5DBE1;
+  --accent:#0B6E99; --accent-ink:#FFFFFF; --accent-soft:#DCEEF6;
+  --ok:#1B7F52; --bad:#CF3F3F; --on-fc:#FFFFFF;
+  --pinky:#C8413D; --pinky-bg:#FBE5E3;
+  --ring:#B26A00; --ring-bg:#FBEBD2;
+  --middle:#23844F; --middle-bg:#DDF1E5;
+  --index:#2F68BF; --index-bg:#DEE8F8;
+  --thumb:#6A5EB5; --thumb-bg:#E8E5F5;
+  --display:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1720; --surface:#172230; --ink:#E8EEF3; --muted:#93A1AE; --line:#2A3A4B;
+    --accent:#4DB6E2; --accent-ink:#06222F; --accent-soft:#16384A;
+    --ok:#52C788; --bad:#FF7A7A; --on-fc:#0F1720;
+    --pinky:#F07F7B; --pinky-bg:#3A2223;
+    --ring:#F0AE55; --ring-bg:#3A2E1C;
+    --middle:#5BCB8B; --middle-bg:#1C3326;
+    --index:#6AA2EE; --index-bg:#1D2D47;
+    --thumb:#A399E6; --thumb-bg:#2B2842;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1720; --surface:#172230; --ink:#E8EEF3; --muted:#93A1AE; --line:#2A3A4B;
+  --accent:#4DB6E2; --accent-ink:#06222F; --accent-soft:#16384A;
+  --ok:#52C788; --bad:#FF7A7A; --on-fc:#0F1720;
+  --pinky:#F07F7B; --pinky-bg:#3A2223;
+  --ring:#F0AE55; --ring-bg:#3A2E1C;
+  --middle:#5BCB8B; --middle-bg:#1C3326;
+  --index:#6AA2EE; --index-bg:#1D2D47;
+  --thumb:#A399E6; --thumb-bg:#2B2842;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--display);font-size:15px;line-height:1.45;
+  padding-block:10px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,.cap:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+kbd{font-family:var(--mono);font-weight:700;font-size:.9em;background:var(--bg);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 6px}
+
+.app{
+  max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:8px;min-height:560px;
+  height:calc(100dvh - 20px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+}
+
+/* bilah atas */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;flex:none}
+h1{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin:0 4px 0 0}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface)}
+.seg button{padding:6px 12px;border:0;background:transparent;font-weight:600;font-size:.85rem;white-space:nowrap}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.btn{padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:.85rem}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tipbtn{margin-left:auto}
+
+/* pelajaran */
+.lessons{display:flex;gap:6px;overflow-x:auto;flex:none;padding-bottom:2px}
+.chip{flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.84rem;font-weight:600;white-space:nowrap}
+.chip .n{font-family:var(--mono);color:var(--muted);font-size:.78rem}
+.chip[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.chip[aria-current="true"] .n{color:var(--accent)}
+.dots{display:flex;gap:3px}
+.dots i{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--muted);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+
+/* visual: peta jari + papan tombol */
+.visual{flex:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;container-type:inline-size}
+.fmap{display:flex;align-items:flex-end;gap:5px;margin-bottom:10px}
+.fcard{
+  flex:1 1 0;min-width:0;min-height:var(--h,76px);display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:4px;
+  padding:7px 3px 7px;border:0;border-radius:16px 16px 8px 8px;background:var(--fb);box-shadow:inset 0 3px 0 var(--fc);color:var(--ink);text-align:center;
+}
+.fcard[data-f="li"],.fcard[data-f="ri"],.fcard[data-f="th"]{flex-grow:1.35}
+.fcard[data-f="lp"],.fcard[data-f="rp"],.fcard[data-f="th"]{--h:70px}
+.fcard[data-f="lr"],.fcard[data-f="rr"],.fcard[data-f="li"],.fcard[data-f="ri"]{--h:80px}
+.fcard[data-f="lm"],.fcard[data-f="rm"]{--h:88px}
+.fn{font-size:.74rem;font-weight:800;line-height:1.1}
+.fn small{display:block;font-weight:600;color:var(--muted);font-size:.7rem}
+.abbr{display:none}
+.fl{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 5px;font:700 .84rem/1.3 var(--mono)}
+.fl i{font-style:normal}
+.fl i.later{opacity:.28}
+.fl i.new{background:var(--fc);color:var(--on-fc);border-radius:4px;padding:0 4px}
+.fcard.target{background:var(--fc);color:var(--on-fc)}
+.fcard.target .fn small{color:inherit}
+.fcard.target .fl i.new{background:var(--on-fc);color:var(--fc)}
+.fcard.shiftcue{outline:2px dashed var(--fc);outline-offset:2px}
+.fcard.sel{box-shadow:inset 0 3px 0 var(--fc),0 0 0 2px var(--fc)}
+.fcard.good{background:var(--ok);color:var(--on-fc)}
+.fcard.bad{background:var(--bad);color:var(--on-fc)}
+.fcard.good .fn small,.fcard.bad .fn small{color:inherit}
+
+.kbwrap{display:flex;justify-content:center}
+.kb{--u:24px;--u:clamp(22px,min(calc((100cqw - 24px)/13.2),calc((100dvh - 480px)/5.3)),60px);--g:calc(var(--u)*.1);width:calc(var(--u)*13)}
+.row{display:flex;margin-bottom:var(--g)}
+.row:last-child{margin-bottom:0}
+.key{
+  width:calc(var(--u)*var(--w,1) - var(--g));height:calc(var(--u)*.95);margin-right:var(--g);
+  display:flex;align-items:center;justify-content:center;position:relative;flex:none;
+  border-radius:calc(var(--u)*.16);background:var(--fb);color:var(--ink);
+  box-shadow:inset 0 -2px 0 var(--fc);font:600 calc(var(--u)*.42)/1 var(--mono);
+}
+.key.later{opacity:.38}
+.key.home::after{content:"";position:absolute;bottom:16%;width:34%;height:2px;border-radius:2px;background:var(--fc)}
+.key.target{opacity:1;background:var(--fc);color:var(--on-fc);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--fc);transform:translateY(-1px)}
+.key.shiftcue{opacity:1;outline:2px dashed var(--fc);outline-offset:2px}
+.key.press{filter:brightness(.88);transform:translateY(1px)}
+.key.bad{background:var(--bad);color:var(--on-fc)}
+.kb.hasfocus .key:not(.lit){opacity:.28}
+.key.lit{opacity:1;outline:2px solid var(--fc);outline-offset:1px}
+.kb.blank .key span{visibility:hidden}
+.key[data-k="shiftL"] span,.key[data-k="shiftR"] span{font-size:.7em}
+.c-p{--fc:var(--pinky);--fb:var(--pinky-bg)}
+.c-r{--fc:var(--ring);--fb:var(--ring-bg)}
+.c-m{--fc:var(--middle);--fb:var(--middle-bg)}
+.c-i{--fc:var(--index);--fb:var(--index-bg)}
+.c-t{--fc:var(--thumb);--fb:var(--thumb-bg)}
+
+/* panggung latihan (kecil) */
+.stage{flex:none;container:stagebox / inline-size;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 16px 12px;overflow:hidden}
+.stagehead{display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.stagehead b{font-weight:800}
+.stagehead .btn{margin-left:auto;padding:4px 10px}
+.weaknote{font-size:.8rem;color:var(--muted)}
+.stats{display:flex;flex-wrap:wrap;gap:2px 16px}
+.stat{display:flex;align-items:baseline;gap:6px}
+.stat span{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.stat b{font-family:var(--mono);font-size:1rem;font-variant-numeric:tabular-nums}
+
+/* bekal jari */
+.bekal{margin-bottom:6px}
+.bk-tip{margin:0 0 4px;font-size:.84rem;color:var(--muted)}
+.bk-row{display:flex;align-items:center;gap:8px}
+.bk-row .lbl{flex:none;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:800}
+.bk-list{display:flex;flex-wrap:wrap;gap:4px 5px;flex:1;min-width:0;padding:1px 2px 3px}
+.bk{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:5px;padding:2px 7px 2px 3px;border-radius:9px;background:var(--fb);box-shadow:inset 0 -2px 0 var(--fc)}
+.bk b{min-width:24px;height:24px;padding:0 5px;display:flex;align-items:center;justify-content:center;border-radius:7px;background:var(--fc);color:var(--on-fc);font:800 .88rem/1 var(--mono);white-space:nowrap}
+.bk small{font-size:.62rem;font-weight:700;line-height:1.1;white-space:nowrap}
+.bk small i{display:block;font-style:normal;font-weight:600;color:var(--muted)}
+.bk.cur{box-shadow:inset 0 -2px 0 var(--fc),0 0 0 2px var(--fc)}
+
+.info{margin:0 0 4px;min-height:1.45em;font-size:.9rem}
+.typing{position:relative;cursor:text;overflow:auto;max-height:42vh}
+.text{font:500 clamp(1.3rem,min(3.4vw,4.6vh),2.4rem)/1.6 var(--mono);white-space:pre-wrap;word-break:break-word;margin:0;padding:2px}
+.ch{border-radius:4px}
+.ch.ok{color:var(--ok)}
+.ch.cur{background:var(--accent);color:var(--accent-ink)}
+.ch.wrong{background:var(--bad)!important;color:var(--on-fc)!important;animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.note{display:none;margin-top:6px;padding:6px 10px;border-radius:8px;background:var(--accent-soft);font-size:.85rem}
+.stage.blur .note{display:block}
+.cap{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;border:0;padding:0;pointer-events:none;font-size:16px}
+
+.quiz{display:flex;align-items:center;gap:16px;padding:2px 0}
+.qkey{flex:none;min-width:clamp(56px,8vh,76px);height:clamp(56px,8vh,76px);padding:0 14px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:var(--bg);border:2px solid var(--line);border-bottom-width:5px;font:800 clamp(1.8rem,5vh,2.6rem)/1 var(--mono)}
+.qkey.long{font-size:clamp(1rem,2.6vh,1.3rem)}
+.qtext b{display:block;font-size:1rem}
+.qtext span{color:var(--muted);font-size:.86rem}
+
+.result{overflow:auto}
+.result h3{margin:0 0 2px;font-size:1.15rem}
+.result p{margin:0 0 8px;color:var(--muted);font-size:.9rem}
+.rgrid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.rgrid div{border:1px solid var(--line);border-radius:9px;padding:4px 12px;min-width:90px}
+.rgrid span{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.rgrid b{font-family:var(--mono);font-size:1.2rem;font-variant-numeric:tabular-nums}
+.ractions{display:flex;flex-wrap:wrap;gap:8px}
+.pass{color:var(--ok)} .fail{color:var(--bad)}
+.stage[data-state="done"] .typing,.stage[data-state="done"] .quiz,.stage[data-state="done"] .info,.stage[data-state="done"] .bekal{display:none}
+.stage[data-state="typing"] .result{display:none}
+.app[data-mode="practice"] .quiz{display:none}
+.app[data-mode="quiz"] .typing,.app[data-mode="quiz"] .bekal{display:none}
+
+/* tingkat bantuan */
+.app[data-level="3"] .kbwrap{display:none}
+.app[data-level="3"] .bekal{display:none}
+.app[data-level="3"][data-mode="practice"] .visual{display:none}
+.app[data-level="3"][data-mode="practice"] .stage{flex:1 1 auto;justify-content:center}
+.app[data-level="3"][data-mode="practice"] .typing{max-height:none}
+.app[data-level="3"][data-mode="practice"] .text{font-size:clamp(1.2rem,3.4vh,1.8rem)}
+/* hafalan: huruf di kartu jari disembunyikan agar jawabannya harus diingat */
+.app[data-mode="quiz"] .fl{visibility:hidden}
+.app[data-mode="quiz"][data-level="2"] .key{--fb:var(--bg);--fc:var(--muted)}
+.app[data-mode="quiz"][data-level="2"] .key.target{--fc:var(--accent)}
+.app[data-mode="quiz"][data-level="3"] .fcard{--fb:var(--bg);--fc:var(--line)}
+
+/* tips */
+.tips{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.tipcard{background:var(--surface);border-radius:14px;max-width:580px;max-height:85dvh;overflow:auto;padding:16px 22px}
+.tipcard h2{margin:0 0 6px;font-size:1.1rem}
+.tipcard ul{margin:8px 0 12px;padding-left:20px;display:grid;gap:6px}
+
+@container (max-width:560px){
+  .full{display:none}
+  .abbr{display:inline}
+  .fn{font-size:.64rem}
+  .fn small{font-size:.6rem}
+  .fl{font-size:.66rem;gap:0 3px}
+  .fl i.new{padding:0 2px}
+  .fcard{padding:6px 1px}
+}
+@container stagebox (max-width:760px){
+  .bk .full{display:none}
+  .bk .abbr{display:inline}
+}
+@media (max-width:640px){
+  .top{gap:6px 8px}
+  .seg button{padding:6px 9px;font-size:.8rem}
+  .stage{padding:8px 12px 10px}
+}
+@media (prefers-reduced-motion:reduce){.ch.wrong{animation:none}}
+</style>
+
+<div class="app" id="app" data-mode="practice" data-level="1">
+  <header class="top">
+    <h1>Ketik Buta</h1>
+    <div class="seg" id="modes">
+      <button data-m="practice" aria-pressed="true">Latihan mengetik</button>
+      <button data-m="quiz" aria-pressed="false">Hafalan jari</button>
+    </div>
+    <div class="seg" id="levels">
+      <button data-l="1" aria-pressed="true">1 Dipandu</button>
+      <button data-l="2" aria-pressed="false">2 Tanpa huruf</button>
+      <button data-l="3" aria-pressed="false">3 Buta</button>
+    </div>
+    <button class="btn tipbtn" id="tipBtn">Tips</button>
+  </header>
+
+  <nav class="lessons" id="lessons" aria-label="Pelajaran"></nav>
+
+  <section class="stage" id="stage" data-state="typing">
+    <div class="stagehead">
+      <b id="lessonName"></b>
+      <div class="stats">
+        <div class="stat"><span id="l1">Kecepatan</span><b id="v1">–</b></div>
+        <div class="stat"><span id="l2">Akurasi</span><b id="v2">100%</b></div>
+        <div class="stat"><span id="l3">Waktu</span><b id="v3">0:00</b></div>
+        <div class="stat"><span id="l4">Salah</span><b id="v4">0</b></div>
+      </div>
+      <span class="weaknote" id="weakNote"></span>
+      <button class="btn" id="btnNew">Teks baru</button>
+    </div>
+    <p class="info" id="info"></p>
+    <div class="typing" id="typing">
+      <input class="cap" id="cap" aria-label="Kolom ketik" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <p class="text" id="text"></p>
+      <div class="note" id="note">Klik di area ini, lalu mulai mengetik. Di HP, ketuk teks agar papan ketik muncul.</div>
+    </div>
+    <div class="quiz" id="quiz">
+      <div class="qkey" id="qKey"></div>
+      <div class="qtext"><b>Jari mana yang menekan tombol ini?</b><span>Klik jari yang tepat di peta bawah.</span></div>
+    </div>
+    <div class="result" id="result"></div>
+  </section>
+
+  <section class="visual" id="visual">
+    <div class="fmap" id="fmap"></div>
+    <div class="kbwrap"><div class="kb" id="kb"></div></div>
+  </section>
+
+  <div class="tips" id="tips" hidden>
+    <div class="tipcard" role="dialog" aria-label="Tips belajar">
+      <h2>Kunci belajar: hafal jari untuk tiap huruf</h2>
+      <ul>
+        <li>Tiap pelajaran punya <b>Bekal jari</b>: huruf baru dan jari yang memegangnya. Baca dulu sebelum mengetik. Jari yang sedang dipakai ikut menyala.</li>
+        <li>Di peta jari, huruf yang baru dipelajari diberi latar warna, huruf yang belum dipelajari dibuat pudar.</li>
+        <li>Klik satu jari di peta untuk menyorot semua tombolnya di papan tombol.</li>
+        <li>Tiap jari memegang satu lajur tombol. Jari bergerak lurus naik atau turun dari baris tengah, lalu kembali. Telunjuk memegang dua lajur.</li>
+        <li>Lalu pindah ke <b>Hafalan jari</b>: huruf muncul, Anda memilih jarinya. Jawaban yang salah muncul lagi beberapa soal kemudian.</li>
+        <li>Letakkan telunjuk kiri di <kbd>F</kbd> dan telunjuk kanan di <kbd>J</kbd>. Raba tonjolan kecilnya. Jempol di spasi.</li>
+        <li>Urutan belajar: satu pelajaran di Tingkat 1, ulangi di Tingkat 2, lalu Tingkat 3, baru pelajaran berikutnya.</li>
+        <li>Kejar akurasi 95% dulu, kecepatan menyusul sendiri. Latihan 15 sampai 20 menit setiap hari.</li>
+        <li>Untuk benar-benar melatih sepuluh jari, pakai keyboard fisik. Di HP hanya jempol yang bekerja.</li>
+        <li>Tekan <kbd>Esc</kbd> untuk mengulang dengan teks atau soal baru.</li>
+      </ul>
+      <button class="btn primary" id="tipClose">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var esc = function(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  var rnd = function(n){ return Math.floor(Math.random()*n); };
+
+  /* ---------- Data pelajaran ---------- */
+  var SENT = [
+    "Saya sedang belajar mengetik dengan sepuluh jari.",
+    "Letakkan jari di baris tengah, lalu mulai mengetik.",
+    "Jangan melihat papan tombol, percayakan pada jari Anda.",
+    "Latihan sepuluh menit setiap hari lebih baik daripada sekali lama.",
+    "Apakah kamu sudah makan siang hari ini?",
+    "Indonesia memiliki ribuan pulau yang indah.",
+    "Ketelitian lebih penting daripada kecepatan pada awalnya.",
+    "Terima kasih sudah belajar bersama, sampai jumpa besok.",
+    "Kecepatan akan datang dengan sendirinya jika jari sudah hafal.",
+    "Bahasa Indonesia mudah dipelajari dan indah didengar."
+  ];
+  var LESSONS = [
+    {t:'Posisi awal',  s:'a s d f · j k l ;', tip:'ASDF di tangan kiri, JKL; di tangan kanan. Telunjuk selalu kembali ke F dan J.', kind:'drill', keys:'asdfjkl;'},
+    {t:'Baris tengah', s:'tambah g dan h', tip:'G dan H dijangkau telunjuk: G oleh telunjuk kiri, H oleh telunjuk kanan.', kind:'words', pool:['ada','saja','salah','gagal','gajah','kakak','jalak','halal','salak','gagah','fg','hj','gh','ghg','hgh','sgsg','dhdh','fgfg']},
+    {t:'Baris atas',   s:'q w e r t y u i o p', tip:'Dari baris tengah, jari naik lurus: A ke Q, S ke W, D ke E, F ke R.', kind:'words', pool:['kita','tahu','dapat','sudah','pagi','tiga','tulis','topi','paku','satu','itu','api','air','duduk','jujur','siapa','tetapi','kepada','dapur','sikap','pasti','kurus','pergi','tetap','ekor','wajah','pesta','guru','ayah','ular','jauh','hari']},
+    {t:'Baris bawah',  s:'z x c v b n m , .', tip:'Dari baris tengah, jari turun lurus: A ke Z, S ke X, D ke C, F ke V.', kind:'words', pool:['makan','minum','nama.','bisa,','cinta','kami,','enam.','benar','banyak','mereka','cuaca','zaman','bumi','bunga','lampu.','vokal','kunci','baca','cuma','nanti','maksimal','ekstra','zebra','izin']},
+    {t:'Angka',        s:'1 2 3 4 5 6 7 8 9 0', tip:'Angka dijangkau dengan naik dua baris dari baris tengah, masih oleh jari yang sama.', kind:'words', pool:['2026','1945','1000','750','2468','1357','90','1234','5678','9087','3141','2718','4096','1010','8642','17','45','360']},
+    {t:'Kata harian',  s:'huruf kecil, semua baris', tip:'Spasi dengan jempol mana saja. Jaga ritme, jangan menunduk.', kind:'words', pool:['selamat pagi','terima kasih','apa kabar','sampai jumpa','saya belajar','setiap hari','bahasa indonesia','sangat baik','tidak apa apa','mari kita mulai','rumah makan','kerja keras','selamat malam','sama sama','tolong bantu saya','buku baru','teman baik','pergi ke pasar','air putih','belajar mengetik']},
+    {t:'Kalimat',      s:'huruf besar dan tanda baca', tip:'Huruf besar: tahan Shift dengan kelingking di sisi tangan yang berlawanan, lalu tekan hurufnya.', kind:'sent', count:2},
+    {t:'Paragraf',     s:'latihan ketahanan', tip:'Pelan tapi tanpa salah. Mata di teks, jari yang mencari tombol.', kind:'sent', count:3}
+  ];
+  /* tombol yang baru diperkenalkan di tiap pelajaran (untuk bekal, hafalan, dan pemudaran huruf) */
+  var INTRO = ['asdfjkl;', 'gh', 'qwertyuiop', 'zxcvbnm,./', '1234567890', ' ', '', ''];
+
+  /* ---------- Jari dan tombol ---------- */
+  var FING = {lp:'1qaz', lr:'2wsx', lm:'3edc', li:'45rtfgvb', ri:'67yuhjnm', rm:'8ik,', rr:'9ol.', rp:'0p;/'};
+  var KIND = {lp:'p',rp:'p',lr:'r',rr:'r',lm:'m',rm:'m',li:'i',ri:'i',th:'t'};
+  var FNAME = {lp:'kelingking kiri', lr:'jari manis kiri', lm:'jari tengah kiri', li:'telunjuk kiri',
+               ri:'telunjuk kanan', rm:'jari tengah kanan', rr:'jari manis kanan', rp:'kelingking kanan', th:'jempol'};
+  var FSHORT = {lp:['Kelingking','Kel','kiri'], lr:['Jari manis','Man','kiri'], lm:['Jari tengah','Teng','kiri'], li:['Telunjuk','Tel','kiri'],
+                th:['Jempol','Jem','spasi'], ri:['Telunjuk','Tel','kanan'], rm:['Jari tengah','Teng','kanan'], rr:['Jari manis','Man','kanan'], rp:['Kelingking','Kel','kanan']};
+  var ORDER_FING = ['lp','lr','lm','li','th','ri','rm','rr','rp'];
+  var keyFinger = {};
+  Object.keys(FING).forEach(function(f){ FING[f].split('').forEach(function(ch){ keyFinger[ch] = f; }); });
+  keyFinger['space'] = 'th'; keyFinger['shiftL'] = 'lp'; keyFinger['shiftR'] = 'rp';
+
+  function lettersOf(f){ return f === 'th' ? 'Spasi' : FING[f].toUpperCase().split('').join(' '); }
+
+  var LAYOUT = [
+    {off:0,    keys:'1234567890'.split('').map(function(k){ return {k:k}; })},
+    {off:0.5,  keys:'qwertyuiop'.split('').map(function(k){ return {k:k}; })},
+    {off:0.75, keys:'asdfghjkl;'.split('').map(function(k){ return {k:k}; })},
+    {off:0,    keys:[{k:'shiftL',w:1.25,label:'Shift'}].concat('zxcvbnm,./'.split('').map(function(k){ return {k:k}; }), [{k:'shiftR',w:1.75,label:'Shift'}])},
+    {off:3.5,  keys:[{k:'space',w:6.25,label:''}]}
+  ];
+  var keyEls = {};
+  function buildKb(){
+    var kb = $('#kb'); kb.innerHTML = '';
+    LAYOUT.forEach(function(r){
+      var row = document.createElement('div'); row.className = 'row';
+      row.style.paddingLeft = 'calc(var(--u)*' + r.off + ')';
+      r.keys.forEach(function(o){
+        var el = document.createElement('div');
+        el.className = 'key c-' + KIND[keyFinger[o.k]] + ((o.k==='f'||o.k==='j') ? ' home' : '');
+        el.style.setProperty('--w', o.w || 1);
+        el.setAttribute('data-k', o.k);
+        el.innerHTML = '<span>' + esc(o.label !== undefined ? o.label : o.k.toUpperCase()) + '</span>';
+        keyEls[o.k] = el; row.appendChild(el);
+      });
+      kb.appendChild(row);
+    });
+  }
+  function buildFmap(){
+    var box = $('#fmap'); box.innerHTML = '';
+    ORDER_FING.forEach(function(f){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'fcard c-' + KIND[f]; b.setAttribute('data-f', f);
+      b.title = FNAME[f] + ': ' + lettersOf(f);
+      var letters = f === 'th' ? '<i>Spasi</i>' : FING[f].split('').map(function(c){ return '<i data-c="' + esc(c) + '">' + esc(c.toUpperCase()) + '</i>'; }).join('');
+      b.innerHTML = '<span class="fn"><span class="full">' + FSHORT[f][0] + '</span><span class="abbr">' + FSHORT[f][1] + '</span><small>' + FSHORT[f][2] + '</small></span><span class="fl">' + letters + '</span>';
+      box.appendChild(b);
+    });
+  }
+
+  function describe(ch){
+    if(ch === ' ') return {key:'space', finger:'th'};
+    var shifted = (ch !== ch.toLowerCase()) || ch === '?';
+    var base = ch === '?' ? '/' : ch.toLowerCase();
+    var f = keyFinger[base] || 'ri';
+    var d = {key:base, finger:f};
+    if(shifted){
+      var left = f.charAt(0) === 'l';
+      d.shiftKey = left ? 'shiftR' : 'shiftL';
+      d.shiftFinger = left ? 'rp' : 'lp';
+    }
+    return d;
+  }
+
+  /* ---------- Penyimpanan kemajuan ---------- */
+  var store = {level:1, lesson:0, mode:'practice', done:{}, weak:{}};
+  try {
+    var raw = JSON.parse(localStorage.getItem('ketikbuta.v1') || '{}');
+    if(raw && typeof raw === 'object'){
+      store.level = raw.level || 1; store.lesson = raw.lesson || 0; store.done = raw.done || {}; store.weak = (raw.weak && typeof raw.weak === 'object') ? raw.weak : {};
+      store.mode = raw.mode === 'quiz' ? 'quiz' : 'practice';
+    }
+  } catch(e){}
+  if(store.lesson >= LESSONS.length) store.lesson = 0;
+  if(store.level < 1 || store.level > 3) store.level = 1;
+  function save(){ try { localStorage.setItem('ketikbuta.v1', JSON.stringify(store)); } catch(e){} }
+
+  /* ---------- Rekaman tombol yang sering salah ---------- */
+  function knownKeys(){
+    var k = {};
+    if(store.lesson >= 5){ Object.keys(keyFinger).forEach(function(c){ if(c.length === 1) k[c] = 1; }); return k; }
+    for(var i = 0; i <= store.lesson && i < INTRO.length; i++) INTRO[i].split('').forEach(function(c){ if(c !== ' ') k[c] = 1; });
+    return k;
+  }
+  function weakKeys(){
+    var k = knownKeys();
+    return Object.keys(store.weak).filter(function(c){ return k[c] && store.weak[c] > 0; })
+      .sort(function(a, b){ return store.weak[b] - store.weak[a]; }).slice(0, 4);
+  }
+  /* tambah skor untuk tombol yang salah; kurangi untuk tombol yang sudah dilatih tanpa salah */
+  function addWeak(map, practiced){
+    var seen = {};
+    Object.keys(map).forEach(function(k){
+      var c = k === '?' ? '/' : k.toLowerCase();
+      if(c === ' ' || c.length !== 1) return;
+      seen[c] = (seen[c] || 0) + map[k];
+    });
+    Object.keys(seen).forEach(function(c){ store.weak[c] = (store.weak[c] || 0) + seen[c]; });
+    String(practiced || '').toLowerCase().split('').forEach(function(c){
+      if(!seen[c] && store.weak[c]) store.weak[c] -= 1;
+    });
+    Object.keys(store.weak).forEach(function(c){ if(store.weak[c] <= 0) delete store.weak[c]; });
+    save();
+  }
+  function updateWeakNote(){
+    var wk = weakKeys(), el = $('#weakNote');
+    el.innerHTML = wk.length ? 'Fokus ekstra: ' + wk.map(function(c){ return '<kbd>' + esc(c.toUpperCase()) + '</kbd>'; }).join(' ') : '';
+  }
+
+  /* ---------- Pembuat teks dan soal ---------- */
+  function pick(arr, avoid){ var x, n = 0; do { x = arr[rnd(arr.length)]; n++; } while(arr.length > 1 && x === avoid && n < 20); return x; }
+  function drillWord(keys, weak){
+    var n = 2 + rnd(3), w = '';
+    for(var i = 0; i < n; i++){
+      var c, t = 0;
+      do { c = (weak.length && Math.random() < .5) ? weak[rnd(weak.length)] : keys.charAt(rnd(keys.length)); t++; } while(w.length && c === w.charAt(w.length-1) && t < 20);
+      w += c;
+    }
+    return w;
+  }
+  function makeText(L){
+    var parts = [], len = 0, last = '';
+    var wk = weakKeys();
+    var has = function(t){ t = t.toLowerCase(); return wk.some(function(k){ return t.indexOf(k) >= 0; }); };
+    if(L.kind === 'drill'){
+      var dw = wk.filter(function(k){ return L.keys.indexOf(k) >= 0; });
+      while(len < 58){ var w = drillWord(L.keys, dw); parts.push(w); len += w.length + 1; }
+      return parts.join(' ');
+    }
+    if(L.kind === 'words'){
+      var cand = wk.length ? L.pool.filter(has) : [];
+      while(len < 58){ var x = (cand.length && Math.random() < .6) ? pick(cand, last) : pick(L.pool, last); parts.push(x); last = x; len += x.length + 1; }
+      return parts.join(' ');
+    }
+    var used = [], scand = wk.length ? SENT.filter(has) : [];
+    while(used.length < (L.count || 2)){ var s = (scand.length && Math.random() < .6) ? pick(scand, used[used.length-1]) : pick(SENT, used[used.length-1]); if(used.indexOf(s) < 0) used.push(s); }
+    return used.join(' ');
+  }
+  function quizPool(){
+    var pool = [];
+    for(var i = 0; i <= store.lesson && i < INTRO.length; i++){
+      var w = (i === store.lesson) ? 3 : 1;
+      INTRO[i].split('').forEach(function(c){ for(var k = 0; k < w; k++) pool.push(c); });
+    }
+    weakKeys().forEach(function(c){ for(var k = 0; k < 3; k++) pool.push(c); });
+    return pool.length ? pool : 'asdfjkl;'.split('');
+  }
+
+  /* ---------- Elemen dan status ---------- */
+  var app = $('#app'), stage = $('#stage'), cap = $('#cap'), textEl = $('#text'), infoEl = $('#info');
+  var state = null, quiz = null, focusF = null;
+
+  var DESC = {
+    practice: {
+      1: 'Dipandu: huruf, warna jari, dan petunjuk terlihat. Mulai di sini.',
+      2: 'Tanpa huruf: tombol tetap menyala, hurufnya hilang. Ingat letaknya.',
+      3: 'Buta: papan tombol disembunyikan. Hanya teks yang tersisa.'
+    },
+    quiz: {
+      1: 'Dipandu: tombol berwarna menyala sebagai petunjuk.',
+      2: 'Tanpa warna: hanya posisi tombol yang menyala.',
+      3: 'Buta: hanya huruf yang diberikan, tanpa papan tombol.'
+    }
+  };
+
+  function setInfo(html){ infoEl.innerHTML = html; }
+
+  function renderLessons(){
+    var box = $('#lessons'); box.innerHTML = '';
+    LESSONS.forEach(function(L, i){
+      var b = document.createElement('button');
+      b.className = 'chip'; b.setAttribute('data-i', i); b.title = L.s;
+      b.setAttribute('aria-current', i === store.lesson ? 'true' : 'false');
+      var dots = '';
+      for(var l = 1; l <= 3; l++) dots += '<i class="' + (store.done[i + '-' + l] ? 'on' : '') + '"></i>';
+      b.innerHTML = '<span class="n">' + (i+1) + '</span>' + esc(L.t) + '<span class="dots">' + dots + '</span>';
+      box.appendChild(b);
+    });
+  }
+
+  /* bekal: huruf baru pelajaran ini, dikelompokkan per jari */
+  function renderBekal(){
+    if(!$('#bkTip')) return;
+    var L = LESSONS[store.lesson];
+    $('#bkTip').textContent = L.tip;
+    var keys = INTRO[store.lesson] + (store.lesson === 0 ? ' ' : '');
+    var groups = {};
+    keys.split('').forEach(function(c){
+      var f = c === ' ' ? 'th' : keyFinger[c];
+      if(!f) return;
+      (groups[f] = groups[f] || []).push(c === ' ' ? 'Spasi' : c.toUpperCase());
+    });
+    var html = '';
+    ORDER_FING.forEach(function(f){
+      if(!groups[f]) return;
+      html += '<span class="bk c-' + KIND[f] + '" data-f="' + f + '"><b>' + esc(groups[f].join(' ')) + '</b><small><span class="full">' + FSHORT[f][0] + '</span><span class="abbr">' + FSHORT[f][1] + '</span><i>' + FSHORT[f][2] + '</i></small></span>';
+    });
+    $('#bkList').innerHTML = html;
+    $('#bkRow').hidden = !html;
+  }
+
+  /* pudarkan tombol dan huruf yang belum dipelajari, tonjolkan yang baru */
+  function updateStates(){
+    var known = {' ': 1}, cur = {};
+    for(var i = 0; i <= store.lesson && i < INTRO.length; i++) INTRO[i].split('').forEach(function(c){ known[c] = 1; });
+    INTRO[store.lesson].split('').forEach(function(c){ cur[c] = 1; });
+    Object.keys(keyEls).forEach(function(k){
+      var ok;
+      if(k === 'space') ok = true;
+      else if(k === 'shiftL' || k === 'shiftR') ok = store.lesson >= 6;
+      else ok = !!known[k];
+      keyEls[k].classList.toggle('later', !ok);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.fl i[data-c]'), function(el){
+      var c = el.getAttribute('data-c');
+      el.classList.toggle('later', !known[c]);
+      el.classList.toggle('new', !!cur[c]);
+    });
+  }
+
+  function applyTitles(){
+    Array.prototype.forEach.call(document.querySelectorAll('#levels button'), function(b){
+      b.title = DESC[store.mode][b.getAttribute('data-l')];
+    });
+  }
+  function applyLevel(){
+    var lv = store.level;
+    app.setAttribute('data-level', String(lv));
+    Array.prototype.forEach.call(document.querySelectorAll('#levels button'), function(b){
+      b.setAttribute('aria-pressed', String(Number(b.getAttribute('data-l')) === lv));
+    });
+    $('#kb').classList.toggle('blank', lv === 2);
+    applyTitles();
+  }
+  function applyMode(){
+    app.setAttribute('data-mode', store.mode);
+    Array.prototype.forEach.call(document.querySelectorAll('#modes button'), function(b){
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-m') === store.mode));
+    });
+    $('#btnNew').textContent = store.mode === 'quiz' ? 'Soal baru' : 'Teks baru';
+    var q = store.mode === 'quiz';
+    $('#l1').textContent = q ? 'Soal' : 'Kecepatan';
+    $('#l2').textContent = q ? 'Benar' : 'Akurasi';
+    $('#l3').textContent = q ? 'Akurasi' : 'Waktu';
+    $('#l4').textContent = q ? 'Beruntun' : 'Salah';
+    applyTitles();
+  }
+
+  function clearTarget(){
+    Array.prototype.forEach.call(document.querySelectorAll('.target,.shiftcue,.bk.cur'), function(e){ e.classList.remove('target', 'shiftcue', 'cur'); });
+  }
+  function clearFocus(){
+    focusF = null;
+    $('#kb').classList.remove('hasfocus');
+    Array.prototype.forEach.call(document.querySelectorAll('.key.lit,.fcard.sel'), function(e){ e.classList.remove('lit', 'sel'); });
+  }
+  function toggleFocus(f){
+    var same = focusF === f;
+    clearFocus();
+    if(same) return;
+    focusF = f;
+    $('#kb').classList.add('hasfocus');
+    Object.keys(keyEls).forEach(function(k){ if(keyFinger[k] === f) keyEls[k].classList.add('lit'); });
+    var c = document.querySelector('.fcard[data-f="' + f + '"]'); if(c) c.classList.add('sel');
+  }
+  function resetCards(){
+    Array.prototype.forEach.call(document.querySelectorAll('.fcard.good,.fcard.bad'), function(e){ e.classList.remove('good', 'bad'); });
+  }
+  function fmt(ms){ var s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function keyLabel(k){ return k === ' ' ? 'Spasi' : k; }
+
+  /* ---------- Mode latihan mengetik ---------- */
+  function render(){
+    var L = LESSONS[state.lesson];
+    $('#lessonName').textContent = 'Pelajaran ' + (state.lesson + 1) + ' · ' + L.t;
+    textEl.innerHTML = state.text.split('').map(function(c){ return '<span class="ch">' + (c === ' ' ? ' ' : esc(c)) + '</span>'; }).join('');
+    textEl.children[0].classList.add('cur');
+  }
+  function infoFor(d, ch){
+    var who = FNAME[d.finger];
+    var sh = d.shiftKey ? ' sambil menahan <kbd>Shift</kbd> dengan ' + FNAME[d.shiftFinger] : '';
+    if(state.level === 1){
+      var k = ch === ' ' ? 'Spasi' : ch;
+      var more = d.finger === 'th' ? '' : ' Jari ini memegang: <b>' + lettersOf(d.finger) + '</b>.';
+      return 'Tekan <kbd>' + esc(k) + '</kbd> dengan <b>' + who + '</b>' + sh + '.' + more;
+    }
+    if(state.level === 2) return 'Tekan tombol yang menyala dengan <b>' + who + '</b>' + sh + '.';
+    return 'Mode buta: tanpa papan tombol. Percayakan pada jari Anda.';
+  }
+  function updateTarget(){
+    clearTarget();
+    var ch = state.text.charAt(state.i);
+    if(!ch) return;
+    var d = describe(ch);
+    if(keyEls[d.key]) keyEls[d.key].classList.add('target');
+    var fc = document.querySelector('.fcard[data-f="' + d.finger + '"]'); if(fc) fc.classList.add('target');
+    var bc = document.querySelector('.bk[data-f="' + d.finger + '"]'); if(bc) bc.classList.add('cur');
+    if(d.shiftKey){
+      keyEls[d.shiftKey].classList.add('shiftcue');
+      var sc = document.querySelector('.fcard[data-f="' + d.shiftFinger + '"]'); if(sc) sc.classList.add('shiftcue');
+    }
+    setInfo(infoFor(d, ch));
+  }
+  function elapsed(){ return state.started ? ((state.done ? state.end : performance.now()) - state.t0) : 0; }
+  function calc(){
+    var ms = elapsed();
+    var wpm = ms > 0 ? Math.round((state.i / 5) / (ms / 60000)) : 0;
+    var acc = state.total ? Math.round(100 * (state.total - state.errors) / state.total) : 100;
+    return {ms:ms, wpm:wpm, acc:acc};
+  }
+  function updateStats(){
+    if(store.mode === 'quiz'){
+      if(!quiz) return;
+      $('#v1').textContent = quiz.asked + '/' + quiz.total;
+      $('#v2').textContent = quiz.ok;
+      $('#v3').textContent = quiz.asked ? Math.round(100 * quiz.ok / quiz.asked) + '%' : '–';
+      $('#v4').textContent = quiz.streak;
+      return;
+    }
+    if(!state) return;
+    var c = calc();
+    $('#v1').textContent = c.ms > 2000 ? c.wpm : '–';
+    $('#v2').textContent = c.acc + '%';
+    $('#v3').textContent = fmt(c.ms);
+    $('#v4').textContent = state.errors;
+  }
+  function clearQuizTimer(){ if(quiz && quiz.timer){ clearTimeout(quiz.timer); quiz.timer = null; } }
+
+  function newText(){
+    clearQuizTimer(); clearFocus(); resetCards();
+    state = {lesson:store.lesson, level:store.level, text:makeText(LESSONS[store.lesson]), i:0, total:0, errors:0, keyErr:{}, started:false, done:false, t0:0, end:0};
+    stage.setAttribute('data-state', 'typing');
+    render(); updateTarget(); updateStats();
+    cap.focus({preventScroll:true});
+    stage.classList.toggle('blur', document.activeElement !== cap);
+  }
+
+  function onChar(ch){
+    if(!state || state.done) return;
+    var exp = state.text.charAt(state.i);
+    if(!state.started){ state.started = true; state.t0 = performance.now(); }
+    state.total++;
+    var span = textEl.children[state.i];
+    if(ch === exp){
+      span.className = 'ch ok';
+      state.i++;
+      if(state.i >= state.text.length){ finish(); }
+      else { textEl.children[state.i].classList.add('cur'); updateTarget(); }
+    } else {
+      state.errors++;
+      state.keyErr[exp] = (state.keyErr[exp] || 0) + 1;
+      span.classList.add('wrong');
+      setTimeout(function(){ span.classList.remove('wrong'); }, 320);
+      if(state.level === 3){
+        var d = describe(exp);
+        var sh = d.shiftKey ? ' + <kbd>Shift</kbd> (' + FNAME[d.shiftFinger] + ')' : '';
+        setInfo('Seharusnya <kbd>' + esc(keyLabel(exp)) + '</kbd> dengan <b>' + FNAME[d.finger] + '</b>' + sh + '. Coba lagi tanpa melihat.');
+      }
+    }
+    updateStats();
+  }
+
+  function weakHtml(map, none){
+    var weak = Object.keys(map).map(function(k){ return [k, map[k]]; }).sort(function(a,b){ return b[1] - a[1]; }).slice(0, 3);
+    if(!weak.length) return none;
+    return 'Paling sering salah: ' + weak.map(function(w){ return '<kbd>' + esc(keyLabel(w[0]).toUpperCase()) + '</kbd> (' + w[1] + 'x)'; }).join(' ') + '.';
+  }
+  function showResult(title, pass, msg, grid, weak, label, primary, againLabel, again){
+    $('#result').innerHTML =
+      '<h3 class="' + (pass ? 'pass' : 'fail') + '">' + title + '</h3>' +
+      '<p>' + msg + '</p>' +
+      '<div class="rgrid">' + grid.map(function(g){ return '<div><span>' + g[0] + '</span><b>' + g[1] + '</b></div>'; }).join('') + '</div>' +
+      '<p>' + weak + '</p>' +
+      '<div class="ractions"><button class="btn primary" id="btnPrimary">' + label + '</button><button class="btn" id="btnAgain">' + againLabel + '</button></div>';
+    stage.setAttribute('data-state', 'done');
+    $('#btnPrimary').onclick = function(){ primary(); };
+    $('#btnAgain').onclick = function(){ again(); };
+    $('#btnPrimary').focus();
+  }
+
+  function finish(){
+    state.done = true; state.end = performance.now();
+    clearTarget(); updateStats();
+    var c = calc(), pass = c.acc >= 95;
+    addWeak(state.keyErr, state.text);
+    updateWeakNote();
+    if(pass){
+      var key = state.lesson + '-' + state.level, prev = store.done[key];
+      if(!prev || c.wpm > prev.wpm) store.done[key] = {wpm:c.wpm, acc:c.acc};
+      save(); renderLessons();
+    }
+    var label, primary;
+    if(pass && state.level < 3){ label = 'Lanjut ke Tingkat ' + (state.level + 1); primary = function(){ setLevel(state.level + 1); }; }
+    else if(pass && state.lesson < LESSONS.length - 1){ label = 'Pelajaran berikutnya'; primary = function(){ setLesson(state.lesson + 1); }; }
+    else if(pass){ label = 'Latihan lagi'; primary = newText; }
+    else { label = 'Coba lagi'; primary = newText; }
+    showResult(pass ? 'Lulus' : 'Belum lulus', pass,
+      pass ? 'Akurasi 95% ke atas. Titik pelajaran ini terisi untuk Tingkat ' + state.level + '.' : 'Akurasi masih di bawah 95%. Pelan saja dulu, kecepatan akan menyusul.',
+      [['Kecepatan', c.wpm], ['Akurasi', c.acc + '%'], ['Waktu', fmt(c.ms)], ['Salah', state.errors]],
+      weakHtml(state.keyErr, 'Tidak ada tombol yang salah. Bagus sekali.') + (Object.keys(state.keyErr).length ? ' Tombol ini akan lebih sering muncul di latihan berikutnya.' : ''),
+      label, primary, 'Teks baru', newText);
+  }
+
+  /* ---------- Mode hafalan jari ---------- */
+  function newQuiz(){
+    clearQuizTimer(); clearFocus(); resetCards(); clearTarget();
+    var pool = quizPool(), q = [], last = '';
+    for(var i = 0; i < 15; i++){ var c = pick(pool, last); q.push({c:c, retry:false}); last = c; }
+    quiz = {chars:q.map(function(x){ return x.c; }).join(''), queue:q, total:15, asked:0, ok:0, streak:0, miss:{}, cur:null, lock:false, timer:null};
+    $('#lessonName').textContent = 'Hafalan · Pelajaran ' + (store.lesson + 1) + ' · ' + LESSONS[store.lesson].t;
+    stage.setAttribute('data-state', 'typing');
+    updateStats(); nextQ();
+  }
+  function nextQ(){
+    resetCards();
+    if(!quiz.queue.length){ finishQuiz(); return; }
+    quiz.cur = quiz.queue.shift(); quiz.lock = false; quiz.timer = null;
+    var c = quiz.cur.c, d = describe(c);
+    $('#qKey').textContent = c === ' ' ? 'Spasi' : c.toUpperCase();
+    $('#qKey').classList.toggle('long', c === ' ');
+    clearTarget();
+    if(keyEls[d.key]) keyEls[d.key].classList.add('target');
+    setInfo(store.level === 1 ? 'Lihat warna tombol yang menyala, lalu pilih jarinya.' : 'Pilih jari yang menekan tombol ini.');
+  }
+  function answer(f){
+    if(!quiz || quiz.lock || stage.getAttribute('data-state') !== 'typing' || !quiz.cur) return;
+    var item = quiz.cur, d = describe(item.c), right = d.finger === f;
+    quiz.lock = true;
+    var card = document.querySelector('.fcard[data-f="' + f + '"]'); if(card) card.classList.add(right ? 'good' : 'bad');
+    if(!item.retry){
+      quiz.asked++;
+      if(right){ quiz.ok++; quiz.streak++; }
+      else { quiz.streak = 0; quiz.miss[item.c] = (quiz.miss[item.c] || 0) + 1; }
+    }
+    var k = '<kbd>' + esc(keyLabel(item.c).toUpperCase()) + '</kbd>';
+    if(right){
+      setInfo('Benar. ' + k + ' dipegang <b>' + FNAME[d.finger] + '</b>.');
+    } else {
+      var cc = document.querySelector('.fcard[data-f="' + d.finger + '"]'); if(cc) cc.classList.add('good');
+      setInfo('Belum tepat. ' + k + ' dipegang <b>' + FNAME[d.finger] + '</b>. Soal ini akan muncul lagi.');
+      if(!item.retry) quiz.queue.splice(Math.min(3, quiz.queue.length), 0, {c:item.c, retry:true});
+    }
+    updateStats();
+    quiz.timer = setTimeout(nextQ, right ? 450 : 1600);
+  }
+  function finishQuiz(){
+    clearTarget();
+    var acc = quiz.asked ? Math.round(100 * quiz.ok / quiz.asked) : 0, pass = acc >= 90;
+    addWeak(quiz.miss, quiz.chars);
+    updateWeakNote();
+    var label, primary;
+    if(pass && store.level < 3){ label = 'Hafalkan di Tingkat ' + (store.level + 1); primary = function(){ setLevel(store.level + 1); }; }
+    else if(pass){ label = 'Mulai latihan mengetik'; primary = function(){ setMode('practice'); }; }
+    else { label = 'Ulangi hafalan'; primary = newQuiz; }
+    showResult(pass ? 'Hafalan bagus' : 'Perlu diulang', pass,
+      pass ? 'Anda sudah hafal letak jari untuk huruf-huruf ini. Saatnya dipakai mengetik.' : 'Lihat lagi peta jari di bawah, lalu coba sekali lagi.',
+      [['Benar sekali jawab', quiz.ok + '/' + quiz.asked], ['Akurasi', acc + '%']],
+      weakHtml(quiz.miss, 'Semua jawaban tepat pada percobaan pertama.') + (Object.keys(quiz.miss).length ? ' Huruf ini akan lebih sering muncul lagi.' : ''),
+      label, primary, 'Ulangi hafalan', newQuiz);
+  }
+
+  /* ---------- Navigasi ---------- */
+  function restart(){
+    renderBekal(); updateStates(); updateWeakNote();
+    if(store.mode === 'quiz') newQuiz(); else newText();
+  }
+  function setLevel(l){ store.level = l; save(); applyLevel(); restart(); }
+  function setLesson(i){ store.lesson = i; save(); renderLessons(); restart(); }
+  function setMode(m){ store.mode = m; save(); applyMode(); applyLevel(); restart(); }
+
+  /* ---------- Peristiwa ---------- */
+  $('#lessons').addEventListener('click', function(e){ var b = e.target.closest('.chip'); if(b) setLesson(Number(b.getAttribute('data-i'))); });
+  $('#levels').addEventListener('click', function(e){ var b = e.target.closest('button'); if(b) setLevel(Number(b.getAttribute('data-l'))); });
+  $('#modes').addEventListener('click', function(e){ var b = e.target.closest('button'); if(b) setMode(b.getAttribute('data-m')); });
+  $('#btnNew').addEventListener('click', function(){ restart(); });
+  $('#fmap').addEventListener('click', function(e){
+    var b = e.target.closest('.fcard'); if(!b) return;
+    var f = b.getAttribute('data-f');
+    if(store.mode === 'quiz'){ answer(f); }
+    else { toggleFocus(f); cap.focus({preventScroll:true}); }
+  });
+  $('#typing').addEventListener('click', function(){ cap.focus({preventScroll:true}); });
+  cap.addEventListener('focus', function(){ stage.classList.remove('blur'); });
+  cap.addEventListener('blur', function(){ if(store.mode === 'practice' && stage.getAttribute('data-state') === 'typing') stage.classList.add('blur'); });
+
+  function keyName(k){
+    if(k === ' ') return 'space';
+    if(k === '?') return '/';
+    if(k.length === 1) return k.toLowerCase();
+    return null;
+  }
+  cap.addEventListener('keydown', function(e){
+    if(!state || state.done) return;
+    var k = keyName(e.key), el = k && keyEls[k];
+    if(!el) return;
+    var cls = (e.key === state.text.charAt(state.i)) ? 'press' : 'bad';
+    el.classList.add(cls);
+    setTimeout(function(){ el.classList.remove(cls); }, 140);
+  });
+  cap.addEventListener('input', function(){
+    var v = cap.value; cap.value = '';
+    for(var i = 0; i < v.length; i++) onChar(v.charAt(i));
+  });
+
+  var tips = $('#tips');
+  function openTips(){ tips.hidden = false; $('#tipClose').focus(); }
+  function closeTips(){ tips.hidden = true; if(store.mode === 'practice' && stage.getAttribute('data-state') === 'typing') cap.focus({preventScroll:true}); }
+  $('#tipBtn').addEventListener('click', openTips);
+  $('#tipClose').addEventListener('click', closeTips);
+  tips.addEventListener('click', function(e){ if(e.target === tips) closeTips(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    e.preventDefault();
+    if(!tips.hidden){ closeTips(); return; }
+    restart();
+  });
+
+  setInterval(function(){ if(store.mode === 'practice' && state && state.started && !state.done) updateStats(); }, 250);
+
+  /* ---------- Mulai ---------- */
+  buildKb(); buildFmap(); renderLessons(); applyMode(); applyLevel(); restart();
+})();
+</script>
+
+</body></html>
