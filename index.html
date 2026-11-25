@@ -7,41 +7,45 @@
 <style>
 /* Satu layar: bilah atas, deretan pelajaran, peta jari + papan tombol (besar, di atas), panggung latihan (kecil, di bawah) */
 :root{
-  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#16212C; --muted:#5A6773; --line:#D5DBE1;
-  --accent:#0B6E99; --accent-ink:#FFFFFF; --accent-soft:#DCEEF6;
-  --ok:#1B7F52; --bad:#CF3F3F; --on-fc:#FFFFFF;
-  --pinky:#C8413D; --pinky-bg:#FBE5E3;
-  --ring:#B26A00; --ring-bg:#FBEBD2;
-  --middle:#23844F; --middle-bg:#DDF1E5;
-  --index:#2F68BF; --index-bg:#DEE8F8;
-  --thumb:#6A5EB5; --thumb-bg:#E8E5F5;
+  --bg:#F2F9FF; --surface:#FFFFFF; --ink:#16324F; --muted:#5B7690; --line:#D3E5F5;
+  --accent:#0284C7; --accent2:#0369A1; --accent-ink:#FFFFFF; --accent-soft:#E0F2FE;
+  --ok:#15803D; --bad:#E11D48; --on-fc:#FFFFFF;
+  --pinky:#D6336C; --pinky-bg:#FFE6EE;
+  --ring:#B45309; --ring-bg:#FFEFD6;
+  --middle:#15803D; --middle-bg:#DEF7E7;
+  --index:#0284C7; --index-bg:#DDF1FD;
+  --thumb:#7C3AED; --thumb-bg:#EEE6FF;
+  --glow1:rgba(56,189,248,.28); --glow2:rgba(186,230,253,.55); --shadow:rgba(2,90,150,.18);
   --display:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0F1720; --surface:#172230; --ink:#E8EEF3; --muted:#93A1AE; --line:#2A3A4B;
-    --accent:#4DB6E2; --accent-ink:#06222F; --accent-soft:#16384A;
-    --ok:#52C788; --bad:#FF7A7A; --on-fc:#0F1720;
-    --pinky:#F07F7B; --pinky-bg:#3A2223;
-    --ring:#F0AE55; --ring-bg:#3A2E1C;
-    --middle:#5BCB8B; --middle-bg:#1C3326;
-    --index:#6AA2EE; --index-bg:#1D2D47;
-    --thumb:#A399E6; --thumb-bg:#2B2842;
+  --bg:#12162B; --surface:#1B2140; --ink:#F2F4FF; --muted:#A3ABD0; --line:#2E3768;
+  --accent:#2DD4BF; --accent2:#60A5FA; --accent-ink:#04201C; --accent-soft:#173B4A;
+  --ok:#4ADE80; --bad:#FF6B81; --on-fc:#14172B;
+  --pinky:#FF7A93; --pinky-bg:#3B2144;
+  --ring:#FFB454; --ring-bg:#3E2F2A;
+  --middle:#4ADE80; --middle-bg:#1D3D3A;
+  --index:#60A5FA; --index-bg:#1E306A;
+  --thumb:#C084FC; --thumb-bg:#34265F;
+  --glow1:rgba(45,212,191,.16); --glow2:rgba(192,132,252,.18); --shadow:rgba(0,0,0,.45);
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0F1720; --surface:#172230; --ink:#E8EEF3; --muted:#93A1AE; --line:#2A3A4B;
-  --accent:#4DB6E2; --accent-ink:#06222F; --accent-soft:#16384A;
-  --ok:#52C788; --bad:#FF7A7A; --on-fc:#0F1720;
-  --pinky:#F07F7B; --pinky-bg:#3A2223;
-  --ring:#F0AE55; --ring-bg:#3A2E1C;
-  --middle:#5BCB8B; --middle-bg:#1C3326;
-  --index:#6AA2EE; --index-bg:#1D2D47;
-  --thumb:#A399E6; --thumb-bg:#2B2842;
+  --bg:#12162B; --surface:#1B2140; --ink:#F2F4FF; --muted:#A3ABD0; --line:#2E3768;
+  --accent:#2DD4BF; --accent2:#60A5FA; --accent-ink:#04201C; --accent-soft:#173B4A;
+  --ok:#4ADE80; --bad:#FF6B81; --on-fc:#14172B;
+  --pinky:#FF7A93; --pinky-bg:#3B2144;
+  --ring:#FFB454; --ring-bg:#3E2F2A;
+  --middle:#4ADE80; --middle-bg:#1D3D3A;
+  --index:#60A5FA; --index-bg:#1E306A;
+  --thumb:#C084FC; --thumb-bg:#34265F;
+  --glow1:rgba(45,212,191,.16); --glow2:rgba(192,132,252,.18); --shadow:rgba(0,0,0,.45);
   color-scheme:dark;
 }
+:root[data-theme="light"]{color-scheme:light}
 *{box-sizing:border-box}
 body{
   background:var(--bg);color:var(--ink);font-family:var(--display);font-size:15px;line-height:1.45;
@@ -225,6 +229,32 @@ h1{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin:0 4px 0 0}
   .stage{padding:8px 12px 10px}
 }
 @media (prefers-reduced-motion:reduce){.ch.wrong{animation:none}}
+
+/* tampilan segar */
+body{background-image:radial-gradient(900px 420px at 8% -8%,var(--glow1),transparent 70%),radial-gradient(800px 420px at 100% 0%,var(--glow2),transparent 70%);background-attachment:fixed}
+h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:1.5rem}
+.stage,.visual{border-radius:20px;box-shadow:0 10px 30px -14px var(--shadow)}
+.seg{border-radius:999px;box-shadow:0 2px 8px -4px var(--shadow)}
+.seg button{transition:background .15s,color .15s}
+.seg button[aria-pressed="true"]{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.btn{border-radius:999px;transition:transform .12s,box-shadow .12s,background .15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px -6px var(--shadow)}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent}
+.chip{transition:transform .12s,background .15s,border-color .15s}
+.chip:hover{transform:translateY(-1px);border-color:var(--accent)}
+.chip[aria-current="true"]{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent) inset}
+.fcard{transition:transform .15s,background .15s,box-shadow .15s}
+.fcard:hover{transform:translateY(-2px)}
+.key{transition:transform .08s,background .12s}
+.key.target{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--fc),0 6px 14px -4px var(--fc)}
+.ch.ok{color:var(--ok)}
+.ch.cur{background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--accent-ink);box-shadow:0 0 12px -2px var(--accent)}
+.rgrid div{border-radius:14px;background:var(--bg)}
+.result h3{font-size:1.3rem}
+.tipcard{border-radius:20px}
+#themeBtn{margin-left:auto}
+#tipBtn{margin-left:0}
+@media (prefers-reduced-motion:reduce){.btn,.chip,.fcard,.key{transition:none}.btn:hover,.chip:hover,.fcard:hover{transform:none}}
 </style>
 
 <div class="app" id="app" data-mode="practice" data-level="1">
@@ -239,6 +269,7 @@ h1{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin:0 4px 0 0}
       <button data-l="2" aria-pressed="false">2 Tanpa huruf</button>
       <button data-l="3" aria-pressed="false">3 Buta</button>
     </div>
+    <button class="btn" id="themeBtn" title="Ganti tema: terang atau gelap">Tema</button>
     <button class="btn tipbtn" id="tipBtn">Tips</button>
   </header>
 
@@ -391,11 +422,11 @@ h1{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin:0 4px 0 0}
   }
 
   /* ---------- Penyimpanan kemajuan ---------- */
-  var store = {level:1, lesson:0, mode:'practice', done:{}, weak:{}};
+  var store = {level:1, lesson:0, mode:'practice', done:{}, weak:{}, theme:'light'};
   try {
     var raw = JSON.parse(localStorage.getItem('ketikbuta.v1') || '{}');
     if(raw && typeof raw === 'object'){
-      store.level = raw.level || 1; store.lesson = raw.lesson || 0; store.done = raw.done || {}; store.weak = (raw.weak && typeof raw.weak === 'object') ? raw.weak : {};
+      store.level = raw.level || 1; store.lesson = raw.lesson || 0; store.done = raw.done || {}; store.theme = raw.theme === 'dark' ? 'dark' : 'light'; store.weak = (raw.weak && typeof raw.weak === 'object') ? raw.weak : {};
       store.mode = raw.mode === 'quiz' ? 'quiz' : 'practice';
     }
   } catch(e){}
@@ -830,6 +861,18 @@ h1{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin:0 4px 0 0}
     for(var i = 0; i < v.length; i++) onChar(v.charAt(i));
   });
 
+  var THEME_LABEL = {light:'Terang', dark:'Gelap'};
+  function applyTheme(){
+    var r = document.documentElement;
+    r.setAttribute('data-theme', store.theme);
+    $('#themeBtn').textContent = 'Tema: ' + THEME_LABEL[store.theme];
+  }
+  $('#themeBtn').addEventListener('click', function(){
+    store.theme = store.theme === 'light' ? 'dark' : 'light';
+    save(); applyTheme();
+    if(store.mode === 'practice' && stage.getAttribute('data-state') === 'typing') cap.focus({preventScroll:true});
+  });
+
   var tips = $('#tips');
   function openTips(){ tips.hidden = false; $('#tipClose').focus(); }
   function closeTips(){ tips.hidden = true; if(store.mode === 'practice' && stage.getAttribute('data-state') === 'typing') cap.focus({preventScroll:true}); }
@@ -846,7 +889,7 @@ h1{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin:0 4px 0 0}
   setInterval(function(){ if(store.mode === 'practice' && state && state.started && !state.done) updateStats(); }, 250);
 
   /* ---------- Mulai ---------- */
-  buildKb(); buildFmap(); renderLessons(); applyMode(); applyLevel(); restart();
+  applyTheme(); buildKb(); buildFmap(); renderLessons(); applyMode(); applyLevel(); restart();
 })();
 </script>
 
