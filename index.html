@@ -252,12 +252,21 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
 .rgrid div{border-radius:14px;background:var(--bg)}
 .result h3{font-size:1.3rem}
 .tipcard{border-radius:20px}
-#themeBtn{margin-left:auto}
+.app{max-width:1180px}
+.top .btn{padding:5px 10px;font-size:.8rem}
+#voiceBtn{margin-left:auto}
+#soundBtn{margin-left:0}
+#listenBtn{margin-left:auto}
+.stagehead #btnNew{margin-left:0}
+.voicenote{font-size:.8rem;color:var(--bad)}
+#themeBtn{margin-left:0}
 .goal{font-size:.8rem;color:var(--muted)}
 .goal b{color:var(--ink)}
 .goal .star{color:#F59E0B}
 .dots i.pro{width:12px;height:12px;border:0;border-radius:0;margin:-2px -1px;background:#F59E0B;clip-path:polygon(50% 0,62% 35%,98% 36%,69% 58%,80% 93%,50% 72%,20% 93%,31% 58%,2% 36%,38% 35%)}
 #tipBtn{margin-left:0}
+@keyframes flashred{0%{box-shadow:inset 0 0 0 3px var(--bad),0 0 24px -4px var(--bad)}100%{box-shadow:0 10px 30px -14px var(--shadow)}}
+.stage.alert{animation:flashred .45s ease-out}
 @media (prefers-reduced-motion:reduce){.btn,.chip,.fcard,.key{transition:none}.btn:hover,.chip:hover,.fcard:hover{transform:none}}
 </style>
 
@@ -273,6 +282,8 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
       <button data-l="2" aria-pressed="false">2 Tanpa huruf</button>
       <button data-l="3" aria-pressed="false">3 Buta</button>
     </div>
+    <button class="btn" id="voiceBtn" title="Ucapan bahasa Indonesia: mati, nama huruf, atau perintah lengkap">Ucapan</button>
+    <button class="btn" id="soundBtn" title="Nyalakan atau matikan suara">Suara</button>
     <button class="btn" id="themeBtn" title="Ganti tema: terang atau gelap">Tema</button>
     <button class="btn tipbtn" id="tipBtn">Tips</button>
   </header>
@@ -290,6 +301,8 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
       </div>
       <span class="goal" id="goal"></span>
       <span class="weaknote" id="weakNote"></span>
+      <span class="voicenote" id="voiceNote"></span>
+      <button class="btn" id="listenBtn" title="Dengarkan lagi">Dengarkan</button>
       <button class="btn" id="btnNew">Teks baru</button>
     </div>
     <p class="info" id="info"></p>
@@ -324,6 +337,8 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
         <li>Kejar akurasi 95% dulu, kecepatan menyusul sendiri. Latihan 15 sampai 20 menit setiap hari.</li>
         <li>Untuk benar-benar melatih sepuluh jari, pakai keyboard fisik. Di HP hanya jempol yang bekerja.</li>
         <li><b>Titik hijau</b> berarti lulus (akurasi 95%). <b>Bintang emas</b> berarti mahir: akurasi 97% dan mencapai standar kecepatan pelajaran itu. Standarnya tertulis di atas teks latihan.</li>
+        <li>Ucapan bahasa Indonesia: klik tombol di papan atau jari di peta untuk mendengar nama hurufnya. Tombol <b>Ucapan</b> mengatur apakah huruf berikutnya diucapkan otomatis (Huruf), dibacakan lengkap dengan jarinya (Perintah), atau mati. Di pelajaran kata dan kalimat, kata dibacakan satu per satu: kata berikutnya diucapkan setelah semua huruf kata sebelumnya selesai diketik, disertai bunyi ding. Tombol <b>Dengarkan</b> mengulang kata atau huruf saat ini. Kalau salah menekan tombol, layar berkedip merah dan terdengar bunyi peringatan.</li>
+        <li>Suara: ketukan lembut tiap huruf benar, bunyi rendah saat salah, dan nada kecil saat latihan selesai. Matikan lewat tombol <b>Suara</b> di kanan atas.</li>
         <li>Tekan <kbd>Esc</kbd> untuk mengulang dengan teks atau soal baru.</li>
       </ul>
       <button class="btn primary" id="tipClose">Tutup</button>
@@ -431,11 +446,11 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
   }
 
   /* ---------- Penyimpanan kemajuan ---------- */
-  var store = {level:1, lesson:0, mode:'practice', done:{}, pro:{}, weak:{}, theme:'light'};
+  var store = {level:1, lesson:0, mode:'practice', done:{}, pro:{}, weak:{}, theme:'light', sound:true, voice:'letter'};
   try {
     var raw = JSON.parse(localStorage.getItem('ketikbuta.v1') || '{}');
     if(raw && typeof raw === 'object'){
-      store.level = raw.level || 1; store.lesson = raw.lesson || 0; store.done = raw.done || {}; store.pro = raw.pro || {}; store.theme = raw.theme === 'dark' ? 'dark' : 'light'; store.weak = (raw.weak && typeof raw.weak === 'object') ? raw.weak : {};
+      store.level = raw.level || 1; store.lesson = raw.lesson || 0; store.sound = raw.sound !== false; store.voice = ['off','letter','full'].indexOf(raw.voice) >= 0 ? raw.voice : 'letter'; store.done = raw.done || {}; store.pro = raw.pro || {}; store.theme = raw.theme === 'dark' ? 'dark' : 'light'; store.weak = (raw.weak && typeof raw.weak === 'object') ? raw.weak : {};
       store.mode = raw.mode === 'quiz' ? 'quiz' : 'practice';
     }
   } catch(e){}
@@ -522,6 +537,117 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
   /* ---------- Elemen dan status ---------- */
   var app = $('#app'), stage = $('#stage'), cap = $('#cap'), textEl = $('#text'), infoEl = $('#info');
   var state = null, quiz = null, focusF = null;
+
+  /* ---------- Suara (dibuat langsung oleh browser, tanpa file) ---------- */
+  var ac = null;
+  function audio(){
+    if(!store.sound) return null;
+    if(!ac){ try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ ac = null; } }
+    if(ac && ac.state === 'suspended'){ try { ac.resume(); } catch(e){} }
+    return ac;
+  }
+  function tone(freq, dur, type, vol, delay, to){
+    var a = audio(); if(!a) return;
+    var t0 = a.currentTime + (delay || 0), o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(freq, t0);
+    if(to) o.frequency.exponentialRampToValueAtTime(to, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(a.destination);
+    o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function sfx(kind){
+    if(!store.sound) return;
+    try {
+      if(kind === 'key') tone(620 + rnd(80), 0.05, 'triangle', 0.05);
+      else if(kind === 'bad'){ tone(300, 0.13, 'square', 0.07, 0, 220); tone(190, 0.2, 'square', 0.07, 0.12, 130); }
+      else if(kind === 'word'){ tone(880, 0.12, 'sine', 0.09); tone(1175, 0.2, 'sine', 0.09, 0.09); }
+      else if(kind === 'ok') tone(988, 0.12, 'sine', 0.08);
+      else if(kind === 'pass'){ tone(523, 0.14, 'sine', 0.09); tone(659, 0.14, 'sine', 0.09, 0.12); tone(784, 0.28, 'sine', 0.09, 0.24); }
+      else if(kind === 'pro'){ [523, 659, 784, 1047].forEach(function(f, i){ tone(f, 0.2, 'triangle', 0.09, i * 0.11); }); tone(1319, 0.5, 'sine', 0.07, 0.46); tone(1568, 0.5, 'sine', 0.05, 0.52); }
+      else if(kind === 'fail'){ tone(392, 0.18, 'sine', 0.08); tone(311, 0.32, 'sine', 0.08, 0.16); }
+    } catch(e){}
+  }
+
+  /* ---------- Suara bahasa Indonesia (Web Speech API bawaan browser) ---------- */
+  var NAME_ID = {a:'a',b:'be',c:'ce',d:'de',e:'e',f:'ef',g:'ge',h:'ha',i:'i',j:'je',k:'ka',l:'el',m:'em',n:'en',o:'o',p:'pe',q:'ki',r:'er',s:'es',t:'te',u:'u',v:'ve',w:'we',x:'eks',y:'ye',z:'zet',
+    '0':'nol','1':'satu','2':'dua','3':'tiga','4':'empat','5':'lima','6':'enam','7':'tujuh','8':'delapan','9':'sembilan',
+    ';':'titik koma',',':'koma','.':'titik','/':'garis miring','?':'tanda tanya',' ':'spasi','-':'strip','!':'tanda seru','\'':'petik'};
+  function nameOf(ch){
+    if(ch === ch.toUpperCase() && ch !== ch.toLowerCase()) return 'huruf besar ' + (NAME_ID[ch.toLowerCase()] || ch);
+    return NAME_ID[ch] || ch;
+  }
+  var HAS_TTS = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+  function idVoice(){
+    if(!HAS_TTS) return null;
+    var list = speechSynthesis.getVoices().filter(function(v){ return /^id([-_]|$)/i.test(v.lang); });
+    if(!list.length) return null;
+    var score = function(v){ return (/natural/i.test(v.name) ? 3 : 0) + (/google|microsoft/i.test(v.name) ? 1 : 0) + (v.localService ? 0 : 0.5); };
+    list.sort(function(a, b){ return score(b) - score(a); });
+    return list[0];
+  }
+  var voiceTimer = null, lastSalah = 0;
+  function say(text, force, rate, delay){
+    if(!HAS_TTS || (!force && store.voice === 'off')) return;
+    clearTimeout(voiceTimer);
+    var go = function(){
+      try {
+        speechSynthesis.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'id-ID'; u.rate = rate || 0.85; u.pitch = 1;
+        var v = idVoice(); if(v) u.voice = v;
+        speechSynthesis.speak(u);
+      } catch(e){}
+    };
+    if(delay) voiceTimer = setTimeout(go, delay); else go();
+  }
+  function commandFor(ch){
+    var d = describe(ch), t = 'Tekan ' + nameOf(ch) + ' dengan ' + FNAME[d.finger];
+    if(d.shiftKey) t += ', sambil menahan shift dengan ' + FNAME[d.shiftFinger];
+    return t;
+  }
+  function wordMode(){ var k = LESSONS[store.lesson].kind; return k === 'words' || k === 'sent'; }
+  function wordAt(t, i){
+    var a = i, b = i;
+    while(a > 0 && t.charAt(a - 1) !== ' ') a--;
+    while(b < t.length && t.charAt(b) !== ' ') b++;
+    return t.slice(a, b);
+  }
+  function wordSpeech(w){
+    if(/^[0-9]+$/.test(w)) return w.split('').map(function(c){ return NAME_ID[c]; }).join(', ');
+    var core = w.replace(/[.,;?!]+$/, ''), punct = w.slice(core.length), t = core;
+    if(core && !/[aeiou]/i.test(core) && core.length <= 5) t = core.split('').map(function(c){ return nameOf(c); }).join(', ');
+    punct.split('').forEach(function(p){ t += ', ' + (NAME_ID[p] || p); });
+    return t;
+  }
+  function voiceTarget(ch){
+    if(store.voice === 'off' || !ch) return;
+    if(wordMode()){
+      var i = state.i, t = state.text;
+      if(i === 0) say(wordSpeech(wordAt(t, 0)), false, 0.78, 350);
+      else if(ch === ' '){
+        sfx('word');
+        if(i + 1 < t.length) say(wordSpeech(wordAt(t, i + 1)), false, 0.78, 700);
+      }
+      return;
+    }
+    say(store.voice === 'full' ? commandFor(ch) : nameOf(ch));
+  }
+  function speakFinger(f){
+    say(f === 'th' ? 'Jempol, untuk spasi' : FNAME[f] + ', memegang ' + FING[f].split('').map(function(c){ return nameOf(c); }).join(', '), true);
+  }
+  function updateVoiceNote(){
+    var el = $('#voiceNote'); if(!el) return;
+    var msg = '';
+    if(store.voice !== 'off' && !HAS_TTS) msg = 'Browser ini tidak mendukung suara.';
+    else if(store.voice !== 'off' && HAS_TTS && !idVoice()) msg = 'Suara bahasa Indonesia belum ditemukan di perangkat ini.';
+    el.textContent = msg;
+  }
+  var VOICE_LABEL = {off:'Mati', letter:'Huruf', full:'Perintah'};
+  function applyVoice(){ $('#voiceBtn').textContent = 'Ucapan: ' + VOICE_LABEL[store.voice]; updateVoiceNote(); }
+  if(HAS_TTS && speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', updateVoiceNote);
 
   var DESC = {
     practice: {
@@ -673,6 +799,7 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
       var sc = document.querySelector('.fcard[data-f="' + d.shiftFinger + '"]'); if(sc) sc.classList.add('shiftcue');
     }
     setInfo(infoFor(d, ch));
+    voiceTarget(ch);
   }
   function elapsed(){ return state.started ? ((state.done ? state.end : performance.now()) - state.t0) : 0; }
   function calc(){
@@ -715,12 +842,18 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     state.total++;
     var span = textEl.children[state.i];
     if(ch === exp){
-      span.className = 'ch ok';
+      span.className = 'ch ok'; sfx('key');
       state.i++;
       if(state.i >= state.text.length){ finish(); }
       else { textEl.children[state.i].classList.add('cur'); updateTarget(); }
     } else {
-      state.errors++;
+      state.errors++; sfx('bad');
+      stage.classList.remove('alert'); void stage.offsetWidth; stage.classList.add('alert');
+      setTimeout(function(){ stage.classList.remove('alert'); }, 450);
+      if(store.voice !== 'off' && performance.now() - lastSalah > 1200){
+        lastSalah = performance.now();
+        say(wordMode() ? 'Salah' : 'Salah, ' + nameOf(exp), false, 0.9);
+      }
       state.keyErr[exp] = (state.keyErr[exp] || 0) + 1;
       span.classList.add('wrong');
       setTimeout(function(){ span.classList.remove('wrong'); }, 320);
@@ -777,6 +910,8 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     var allPro = [1,2,3].every(function(l){ return store.pro[state.lesson + '-' + l]; });
     if(pass && allPro) msg += ' Ketiga tingkat sudah mahir: Anda siap ke pelajaran berikutnya.';
     else if(pass && allPass) msg += ' Ketiga tingkat sudah lulus: boleh lanjut ke pelajaran berikutnya.';
+    sfx(pro ? 'pro' : (pass ? 'pass' : 'fail'));
+    say((pro ? 'Mahir' : (pass ? 'Lulus' : 'Belum lulus')) + '. Akurasi ' + c.acc + ' persen, kecepatan ' + c.wpm + ' kata per menit.');
     showResult(pro ? 'Mahir ★' : (pass ? 'Lulus' : 'Belum lulus'), pass, msg,
       [['Kecepatan', c.wpm], ['Akurasi', c.acc + '%'], ['Waktu', fmt(c.ms)], ['Salah', state.errors]],
       weakHtml(state.keyErr, 'Tidak ada tombol yang salah. Bagus sekali.') + (Object.keys(state.keyErr).length ? ' Tombol ini akan lebih sering muncul di latihan berikutnya.' : ''),
@@ -803,6 +938,7 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     clearTarget();
     if(keyEls[d.key]) keyEls[d.key].classList.add('target');
     setInfo(store.level === 1 ? 'Lihat warna tombol yang menyala, lalu pilih jarinya.' : 'Pilih jari yang menekan tombol ini.');
+    say(nameOf(c));
   }
   function answer(f){
     if(!quiz || quiz.lock || stage.getAttribute('data-state') !== 'typing' || !quiz.cur) return;
@@ -815,11 +951,13 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
       else { quiz.streak = 0; quiz.miss[item.c] = (quiz.miss[item.c] || 0) + 1; }
     }
     var k = '<kbd>' + esc(keyLabel(item.c).toUpperCase()) + '</kbd>';
+    sfx(right ? 'ok' : 'bad');
     if(right){
       setInfo('Benar. ' + k + ' dipegang <b>' + FNAME[d.finger] + '</b>.');
     } else {
       var cc = document.querySelector('.fcard[data-f="' + d.finger + '"]'); if(cc) cc.classList.add('good');
       setInfo('Belum tepat. ' + k + ' dipegang <b>' + FNAME[d.finger] + '</b>. Soal ini akan muncul lagi.');
+      say('Seharusnya ' + FNAME[d.finger]);
       if(!item.retry) quiz.queue.splice(Math.min(3, quiz.queue.length), 0, {c:item.c, retry:true});
     }
     updateStats();
@@ -829,6 +967,7 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     clearTarget();
     var acc = quiz.asked ? Math.round(100 * quiz.ok / quiz.asked) : 0, pass = acc >= 90;
     addWeak(quiz.miss, quiz.chars);
+    sfx(pass ? 'pass' : 'fail');
     updateWeakNote();
     var label, primary;
     if(pass && store.level < 3){ label = 'Hafalkan di Tingkat ' + (store.level + 1); primary = function(){ setLevel(store.level + 1); }; }
@@ -859,7 +998,7 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     var b = e.target.closest('.fcard'); if(!b) return;
     var f = b.getAttribute('data-f');
     if(store.mode === 'quiz'){ answer(f); }
-    else { toggleFocus(f); cap.focus({preventScroll:true}); }
+    else { toggleFocus(f); if(focusF === f) speakFinger(f); cap.focus({preventScroll:true}); }
   });
   $('#typing').addEventListener('click', function(){ cap.focus({preventScroll:true}); });
   cap.addEventListener('focus', function(){ stage.classList.remove('blur'); });
@@ -896,6 +1035,33 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
     if(store.mode === 'practice' && stage.getAttribute('data-state') === 'typing') cap.focus({preventScroll:true});
   });
 
+  $('#kb').addEventListener('click', function(e){
+    var k = e.target.closest('.key'); if(!k || store.mode === 'quiz') return;
+    var key = k.getAttribute('data-k'), f = keyFinger[key];
+    var nm = key === 'shiftL' || key === 'shiftR' ? 'shift' : (key === 'space' ? 'spasi' : nameOf(key));
+    say(nm + ', ' + FNAME[f], true);
+  });
+  $('#voiceBtn').addEventListener('click', function(){
+    store.voice = store.voice === 'off' ? 'letter' : (store.voice === 'letter' ? 'full' : 'off');
+    save(); applyVoice();
+    if(store.voice !== 'off') say(store.voice === 'full' ? 'Ucapan perintah lengkap' : 'Ucapan nama huruf');
+    if(store.mode === 'practice' && stage.getAttribute('data-state') === 'typing') cap.focus({preventScroll:true});
+  });
+  $('#listenBtn').addEventListener('click', function(){
+    if(store.mode === 'quiz'){ if(quiz && quiz.cur) say(nameOf(quiz.cur.c), true); return; }
+    if(!state || state.done) return;
+    var ch = state.text.charAt(state.i);
+    if(wordMode()) say(wordSpeech(wordAt(state.text, Math.min(state.i, state.text.length - 1))), true, 0.78);
+    else if(ch) say(commandFor(ch), true);
+    if(stage.getAttribute('data-state') === 'typing') cap.focus({preventScroll:true});
+  });
+  function applySound(){ $('#soundBtn').textContent = 'Suara: ' + (store.sound ? 'Nyala' : 'Mati'); }
+  $('#soundBtn').addEventListener('click', function(){
+    store.sound = !store.sound; save(); applySound();
+    if(store.sound) sfx('ok');
+    if(store.mode === 'practice' && stage.getAttribute('data-state') === 'typing') cap.focus({preventScroll:true});
+  });
+
   var tips = $('#tips');
   function openTips(){ tips.hidden = false; $('#tipClose').focus(); }
   function closeTips(){ tips.hidden = true; if(store.mode === 'practice' && stage.getAttribute('data-state') === 'typing') cap.focus({preventScroll:true}); }
@@ -912,7 +1078,7 @@ h1{background:linear-gradient(90deg,#0EA5E9,#0369A1);-webkit-background-clip:tex
   setInterval(function(){ if(store.mode === 'practice' && state && state.started && !state.done) updateStats(); }, 250);
 
   /* ---------- Mulai ---------- */
-  applyTheme(); buildKb(); buildFmap(); renderLessons(); applyMode(); applyLevel(); restart();
+  applyTheme(); applySound(); applyVoice(); buildKb(); buildFmap(); renderLessons(); applyMode(); applyLevel(); restart();
 })();
 </script>
 
